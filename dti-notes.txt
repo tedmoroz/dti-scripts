@@ -1,0 +1,180 @@
+if is just cmo  the full path to start would
+be /pbs/bin/cmo -s
+If it's to do with the web services part. you'll need to login into the web
+server and change directories to /etc/httpd and run something like httpd -k
+restart
+
+/pbs/Java/multicaster/mcaster -start
+***********************************************************************
+to clone a prod to test check:
+1. crond
+2. /etc/exports (exportfs)
+3. /etc/hosts
+4. /ets/sysconfig/networking
+5. /etc/sysconfig/network
+6. /etc/sysconfig/network-scirpts  change ifcfg-ethx
+7. /etc/udev/rules.d - edit 70-persistent-rules.net
+8. check all /dbs/<db>/broker & /connect .pf files
+9. /etc/fstab
+10. /etc/host.allow & deny
+11. /etc/resolv.conf - changes host name
+
+*****************************   GUI PROBLEM  ********************************
+1)	If it is just a single user, I would have them use the regular link and resave their shortcut, for instance lots of people download the java app and save it, then reuse that application to relaunch.  Sometimes these get corrupted and need to be redownloaded.   
+2)	If that doesn’t work, I would check their Java version, I have version 7 update 45.  I think if you go much higher it doesn’t work.
+3)	Could be they need a password change and need to log in to character first to ensure that is not the issue.
+4)	If it is multiple users, then cm –s 
+5)	If it is multiple users and step  4 didn’t work, I would check the gui link setup.
+
+This is the link I use for the corporate launcher:
+
+http://10.120.5.85/pbs/jnlp/cm/altcorp.jnlp
+
+I actually have my shortcut set to this so that it downloads everytime rather than setting the shortcut to the downloaded file.
+
+For individual site links, the link would look like this:
+Abilene:
+http://arlxpbs01/pbs/jnlp/cm/alt.jnlp
+
+Anderson:
+http://ailxpbs01/pbs/jnlp/cm/alt.jnlp -- just replace the hostname in the link for each site.
+***************************************************************************
+
+$DLC/bin/nsman -i cmo_cmo -query
+$DLC/bin/nsman -i NS1 -query
+. /pbs/config/cmfull ; $DLC/bin/proutil -C dbipcs | grep Yes ; $DLC/bin/nsman -i NS1 -q
+ . /pbs/config/pbs
+ cd $PRODB
+ rm *.lk
+<db> -s
+
+first set DLC
+DLC=/app/pcs101cf
+PATH=$PATH/pbs/bin   or /pbs/bin/cmo -s
+$DLC/bin/wtbman -i cmo_cmo -start 
+$DLC/bin/wtbman -i cmo_cmo -query
+
+TO remove shard memory:
+proutil pbs -C dbipcs
+
+a list of memory seqments comes up. look fo rhte one that has a "no".
+grep for hte proutil id#.
+
+ipcs -p | grep <id#> to get cpid, then kill the cpid.
+
+Proutil -> cd $DLS/app/pcs102Bq/bin
+********************************************************
+The only thing I've found out about that that works, short of rebooting or using ipcrm, is to run a script DTI created; /pbs/Install/tools/start_db cm|am|im|lm|cmo|pbs
+
+I think that was DTI's failsafe for the shared memory error. If you still get errors after running that then we have to look at the db log to see what error it's getting on startup. 
+
+For books there's a whole bunch that Dan Foreman wrote that deal with Progress. We sell those so you can maybe pick up a set or two when you're in for class; there might even be a discount for buying them while in class.
+
+#*******************************************************
+# BACKUPS
+#*******************************************************
+It's called pbsnight but it spawns backups by database so you'll want to catch those. Also there's the system backup called "system". Thoseostly spawn the tar's.
+***********************************************************
+*  webspeed
+***********************************************************
+If you want to see the actual status of each, run:
+> 
+> $DLC/bin/wtbman -i hm_hm -query
+> $DLC/bin/wtbman -i cm_cm -query
+> $DLC/bin/wtbman -i cmo_cmo -query
+> 
+> And that'll show the individual agents and their status.
+> 
+> If you see the webspeed is up and running, don't remove the .lk 
+files of the databases as those have to be up and running for the 
+webspeed to start properly. By removing them from a running database, 
+you're essentially pulling the rug out from underneath the database and it crashes.
+> 
+> The order should be to set your environment first with ". /pbs/config/cmfull", 
+then check status and only if stuff isn't running then run the 
+various starts "cm -s", "hm -s" and "cmo -s".
+> 
+> If the databases aren't running and won't start for whatever reason, 
+you should get a message saying that after running those start scripts.
+******************************************************************
+*ports
+******************************************************************
+Please create the following firewall rule for Evansville test DTI server.
+Need		Source	Destination		Port		Protocol	Notes					
+DTI test	216.195.71.189 and .156  
+		AND 199.19.246.105		
+		10.120.5.63			80, 5200, 
+						5205-5210,
+						8255, 8260-8270	tcp		eclxpbstst01
+
+************************************************************************
+DLC environment variable to /app/psc102bq when it should be set to the full version, /app/psc102bf. The q version has only what's needed to run the code for the end users, the f version has everything admins need. 
+Under /dbs/am there's a file called am.dl. That file contains the list of all databases that should be started. Just remove the line that refers to im and everything else should start. The same holds true for each of the area; am, cm, im, lm, ffw and pbs: you'll find a .dl file under each.
+
+ProMonitor code runs on the individual sites, but connects back to the ProMonitor db running on nplxpromon01. So when an alert gets generated and an email needs to be sent out, it refers back to the mailx program under the script directory on the individual sites, /app/pm11/scripts/mailx. That version of mailx is a compiled version which allows for attachments. The normal version that comes on linux doesn't by default. However they both use the same base configuration which relies on sendmail for sending mail off the site's server. The only time we're sending an actual attachment however is when we run the daily upload, which does run from nplxpromon01 twice a day. We broke it down that way because with all the different sites' activity, one large attachment was too large to send. Normally we'd send that as a single large file sending the previous day's data, but in your case we send at noon and midnight (11:59 and 23:59) of the same day.
+
+I've always used dti's config files to set environment, in this case ". /pbs/config/cmfull" (vs ". /pbs/config/cm"). The former sets the full version of Progress so you have access to the 4gl product and being able to compile and the latter is what the end-users use for running the DTI application client. Basically "f" vs "q"	
+
+Normally to run an index rebuild, you run "$DLC/bin/proutil <db> -C idxbuild all -TB 31 -TM 32 -SG 64 -B 10000" There's some newer options in v11 of Progress, but running that command from the command line should have your session show a bunch of messages where indexes get deactivated and then it'll start counting off blocks as it sorts through them all for different areas and sort groups. The way I like to run it is with nohup and in the background, so the command would be "nohup $DLC/bin/proutil <db> -C idxbuild all -TB 31 -TM 32 -SG 64 -B 10000 &". The "&" is what puts the process into the background and the "nohup" gives it a terminal to attach to so you can disconnect your terminal session and the process will still run. It'll create a nohup.out file in the directory where you start it, so you can then be tailing that output file and watch what happens as well as tailing the db log file. That's a nice feature if you want it to run locally on the machine and not worry about your terminal session timing out or accidentally disconnecting.
+
+If you don't want to rebuild all indexes, you can run with "some" instead of "all" but then you have to specify the tables and indexes you want to rebuild. You can do this with an input file, but that gets trickier. Generally it's just easier to run it with the all option and let it rebuild all indexes. You don't want to do that on a very large database tho with lots of indexes because it can take a long time to run, but if you need to rebuild all indexes anyways, then you just have to bite the bullet and do them all. The rest of the parameters are just for performance. The only other thing you may want to do is to create an index sort file, typically <db>.srt in the database directory where you specify where the temporary sort files go, but that's only on larger databases, anything under 10GB I'd say you probably don't have to worry about unless you're really tight on disk space. It'll again default to where you run the command from if you don't specify it. 
+
+The only way to tell if the index rebuild is running other than tailing the db and the nohup.out files is to ps for the process; look for proutil or idxbuild and that should show which process it is.
+
+I've just found that over time and with experience doing index rebuilds that I assign the max to TB and TM. I don't bother specifying a sort directory with -T unless I'm tight on disk space and need to worry about where it's creating the temporary sort files. If you use a .srt file tho, then that takes care of both where the temporary sort files will go and how large they'll be. Just as a note, typically you want the sort file to total to double the size of the database to make sure there's enough space to properly index the database. I've never used -SS, so can't really speak to that but I've never found it necessary. The "\" on the first line just tells unix scripting to connect with the second line and treat them as one line. I typically paste everything together on the same line, but some people like to have things shortened to make it easier to read. The -B isn't really necessary since you'll be doing this offline, but a little bit of memory assigned specifically to the index rebuild doesn't hurt. If you have the extra to throw at it tho then great, if not, then 500 is fine too. The "2>" is redirecting standard error into the file specified. Oftentimes you'll see "2>&1" and that's redirecting standard error into standard output, so that you then send both errors and regular output into the same log file, but if you want error to go to a different log than the standard output
+************************************************************************************************
+The steps I go through to verify record counts are:
+	
+	When you run the dumpall.sh and loadall.sh scripts, you run with "nohup" in front and "&" at the end which detaches the process from the terminal session so that in case you get disconnected, the process will continue to run to completion. That leaves a nohup.out file out there that you'll want t rename: so "nohup dumpall.sh &" rename it to nohup-dump.out and "nohup loadall.sh &" rename it to nohup-load.out
+	Copy the db analysis to have an editable version. I usually copy DBA to TAB (eg. cp cm-DBA-before.txt cm-TAB-before.txt). 
+	Edit that TAB file to remove anything from INDEX BLOCK on down. Also concatenate any lines under RECORD BLOCK that have been separated by length being too long. Use Shift-J to accomplish this in vi edit. Save and exit.
+	To grab the record counts from the modified db analysis, run: grep "PUB." cm-TAB-before.txt | awk '{print $2}' > dump.out
+	To grab the record counts from the modified db analysis, run: grep "PUB." cm-TAB-after.txt | awk '{print $2}' > load.out
+	To grab the record counts from the nohup-dump.out, run: grep "(13932)" nohup-dump.out | awk '{print $2}' > dump1.out
+	To grab the record counts from the nohup-load.out, run: grep "(15167)" nohup-load.out | awk '{print $2}' > load1.out
+	Then sort the .out files to put the record counts in sort order; makes comparing more consistent
+		cat dump.out | sort -n > dump.srt
+		cat load.out | sort -n > load.srt
+		cat dump1.srt | sort -n > dump1.srt
+		cat load1.out | sort -n > load1.srt
+	Then diff the files to see if any differences pop up
+		diff dump.srt dump1.srt
+		diff laod.srt load1.srt
+		diff dump.srt load.srt
+
+If everything is hunky-dory, then you get nothing back from the diff. If there's differences, the lines that start with "<" refer to lines from the first file in the diff command and the lines that start with ">" refer to lines from the second file in the diff command. Usually if there's differences it's either because a line in the modified db analysis is not aligned properly.  Make sure those are lined up to match. Sometimes they separate the tablename from the rest of the line because of length.
+
+
+special start script, /pbs/Install/tools/startdb
+*****************************************************************
+Create a separate st file, <db>-add.st is what I usually do. Add the lines for the ai extents
+
+            #
+            a /ai/<area>/<db>.a1
+            #
+            a /ai/<area>/<db>.a2
+
+and so on until you have the number of extents you want. 
+
+Then add them to the database while the db is down.
+
+            $DLC/bin/prostrct add <db> <db>-add.st
+
+Change permissions to be open for all.
+
+            chmod 666 /ai/<area>/<db>.a*
+
+Then enable after imaging.
+
+            $DLC/bin/rfutil <db> -C mark backedup
+            $DLC/bin/rfutil <db> -C aimage begin
+
+Then enable AI Archiver.
+
+            $DLC/bin/rfutil <db> -C aiarchiver enable
+
+***********************************************************************
+find  -mtime +5 -exec rm -f {} \; > /dev/null 2>&1
+
+date && echo $((`date +%s` / (60*60*24)))
+sed -i ’s/mailout.scripps.com/mailout.jmg.com/g' /etc/mail/sendmail.cf
